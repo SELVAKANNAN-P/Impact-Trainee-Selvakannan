@@ -1,0 +1,83 @@
+CREATE DATABASE IF NOT EXISTS task;
+USE task;
+
+CREATE TABLE IF NOT EXISTS product (
+    productId INT PRIMARY KEY,
+    productName VARCHAR(30),
+    productQty INT,
+    price INT,
+    eDate DATE
+);
+
+INSERT INTO product (productId, productName, productQty, price, eDate) 
+VALUES
+(101, 'laptop', 5, 25000, '2022-12-27'),
+(102, 'Mouse', 6, 10000, '2023-04-20'),
+(103, 'Keyboard', 4, 20000, '2025-02-15'),
+(104, 'Charger', 7, 15000, '2024-06-24'),
+(105, 'Tablet', 3, 30000, '2023-04-02');
+
+CREATE TABLE IF NOT EXISTS log_table (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    message VARCHAR(255) NOT NULL
+);
+
+DELIMITER //
+
+CREATE PROCEDURE getProd(IN id INT)
+BEGIN
+    SELECT * FROM product WHERE productId = id;
+END //
+
+DELIMITER ;
+
+CALL getProd(103);
+
+DELIMITER //
+
+CREATE PROCEDURE getAllProducts()
+BEGIN 
+    SELECT * FROM product;
+END //
+
+DELIMITER ;
+
+CALL getAllProducts();
+
+DELIMITER //
+
+CREATE TRIGGER after_insert_product
+AFTER INSERT ON product
+FOR EACH ROW
+BEGIN
+    INSERT INTO log_table (message)
+    VALUES (CONCAT('Total rows after insertion: ', (SELECT COUNT(*) FROM product)));
+END //
+
+DELIMITER ;
+
+UPDATE product SET eDate = '2022-12-27' WHERE productId = 101;
+UPDATE product SET eDate = '2023-04-20' WHERE productId = 102;
+UPDATE product SET eDate = '2025-02-15' WHERE productId = 103;
+UPDATE product SET eDate = '2024-06-24' WHERE productId = 104;
+UPDATE product SET eDate = '2023-04-02' WHERE productId = 105;
+
+ALTER TABLE product
+DROP COLUMN eDate;
+
+DELIMITER //
+
+CREATE PROCEDURE getExpiredProducts(IN expYear INT, IN expMonth INT, IN expDay INT)
+BEGIN
+    SELECT * FROM product
+    WHERE YEAR(eDate) = expYear
+    AND MONTH(eDate) = expMonth
+    AND DAY(eDate) = expDay;
+END //
+
+DELIMITER ;
+
+CALL getExpiredProducts(2023, 4, 20);
+
+SELECT * FROM product
+WHERE price < 15000;
